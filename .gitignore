@@ -1,0 +1,19 @@
+# Backups of edited Claude/Codex configs (machine-specific, may contain personal paths)
+backups/
+*.bak
+
+# Node (the UI server uses ZERO dependencies; this is just in case)
+node_modules/
+npm-debug.log*
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+
+# Runtime state lives in %TEMP%\agent-status-lights, never in the repo — listed for clarity
+# (nothing to ignore here, but do not commit any local state.json/events.json copies)
+state.json
+events.json
+status-light.log

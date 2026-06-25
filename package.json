@@ -1,0 +1,16 @@
+{
+  "name": "agent-status-lights",
+  "version": "1.0.0",
+  "description": "Local agent status lighting for Claude Code and Codex CLI on Windows. OpenRGB + console/notification/sound fallbacks, with an interactive dashboard.",
+  "scripts": {
+    "start": "node ui/server.js",
+    "ui": "node ui/server.js"
+  },
+  "dependencies": {},
+  "keywords": ["claude-code", "codex", "openrgb", "hooks", "rgb", "anne-pro-2", "status", "windows"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  }
+}
+

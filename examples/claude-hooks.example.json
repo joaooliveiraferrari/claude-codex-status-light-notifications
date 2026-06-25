@@ -1,0 +1,45 @@
+{
+  "_comment": "Example Claude Code hooks. install.ps1 MERGES these into ~/.claude/settings.json (preserving any existing hooks). Replace <PROJECT> with the real path, e.g. C:\\Dev\\agent-status-lights. Claude Code has NO dedicated 'error' hook, so error is driven manually / by the UI.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"<PROJECT>\\status-light.ps1\" -Status idle -Source claude -FromHook"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"<PROJECT>\\status-light.ps1\" -Status working -Source claude -FromHook"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"<PROJECT>\\status-light.ps1\" -Status approval -Source claude -FromHook"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"<PROJECT>\\status-light.ps1\" -Status done -Source claude -FromHook"
+          }
+        ]
+      }
+    ]
+  }
+}

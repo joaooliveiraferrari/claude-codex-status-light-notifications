@@ -1,0 +1,41 @@
+{
+  "_comment": "Agent Status Lights config. Edit here or via the UI at http://localhost:8787",
+  "openRgbPath": "",
+  "deviceIndex": 0,
+  "deviceName": "Anne Pro 2",
+  "allowAllDevices": false,
+  "enableOpenRgb": false,
+  "openRgbMode": "static",
+  "openRgbTimeoutMs": 8000,
+  "serverPort": 8787,
+  "enableNotifications": true,
+  "enableSounds": true,
+  "soundOnStatuses": ["approval", "error"],
+  "notifyOnStatuses": ["approval", "done", "error"],
+  "sessionMaxAgeMinutes": 180,
+  "doneExpireMinutes": 30,
+  "colors": {
+    "working": "#0982FC",
+    "approval": "#FC682A",
+    "done": "#00FF00",
+    "error": "#8D3EF9",
+    "idle": "#FEFEFF",
+    "normal": "#FEFEFF",
+    "off": "#000000"
+  },
+  "altColors": {
+    "_comment": "Alternative brand options mentioned in the brief; not used unless you copy into colors{}",
+    "workingRed": "#FF0000",
+    "errorRedBlink": "#FF0000"
+  },
+  "ui": {
+    "primaryBlue": "#0982FC",
+    "secondaryBlue": "#369BFE",
+    "primaryOrange": "#FC682A",
+    "secondaryOrange": "#FE7E45",
+    "accentPurple": "#8D3EF9",
+    "darkBackground": "#1E1F1F",
+    "gray": "#7F7F81",
+    "white": "#FEFEFF"
+  }
+}

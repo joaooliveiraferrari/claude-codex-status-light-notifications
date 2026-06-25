@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Status Lights</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="logo-dot" id="logoDot"></span>
+        <h1>Agent Status <span class="accent">Lights</span></h1>
+      </div>
+      <div class="status-pill" id="statusPill">
+        <span class="pill-dot" id="pillDot"></span>
+        <span id="pillText">loading…</span>
+      </div>
+    </header>
+
+    <main class="grid">
+      <!-- Current status -->
+      <section class="card span-2">
+        <div class="card-head"><h2>Current Status</h2><span class="muted" id="updatedAt"></span></div>
+        <div class="status-hero">
+          <div class="hero-swatch" id="heroSwatch"></div>
+          <div class="hero-meta">
+            <div class="hero-status" id="heroStatus">—</div>
+            <div class="hero-sub"><span class="muted">color</span> <code id="heroColor">#000000</code></div>
+            <div class="hero-sub"><span class="muted">provider</span> <code id="heroProvider">—</code></div>
+            <div class="hero-sub"><span class="muted">active sessions</span> <code id="heroSessions">0</code></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quick controls -->
+      <section class="card">
+        <div class="card-head"><h2>Set Status</h2></div>
+        <div class="btn-grid">
+          <button class="btn b-working"  data-status="working">Working</button>
+          <button class="btn b-approval" data-status="approval">Approval needed</button>
+          <button class="btn b-done"     data-status="done">Done</button>
+          <button class="btn b-error"    data-status="error">Error</button>
+          <button class="btn b-normal"   data-status="normal">Normal</button>
+          <button class="btn b-off"      data-status="off">Off</button>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <section class="card">
+        <div class="card-head"><h2>Actions</h2></div>
+        <div class="btn-col">
+          <button class="btn ghost" id="btnTest">▶ Run full test</button>
+          <div class="seg">
+            <select id="installTarget">
+              <option value="all">Claude + Codex</option>
+              <option value="claude">Claude only</option>
+              <option value="codex">Codex only</option>
+            </select>
+            <button class="btn ghost" id="btnInstall">Install hooks</button>
+            <button class="btn ghost danger" id="btnUninstall">Uninstall</button>
+          </div>
+          <button class="btn ghost subtle" id="btnPlan">Preview install (dry-run)</button>
+        </div>
+      </section>
+
+      <!-- OpenRGB / devices -->
+      <section class="card">
+        <div class="card-head"><h2>RGB Provider</h2><button class="mini" id="btnDevices">Rescan</button></div>
+        <div id="orgbStatus" class="kv">…</div>
+        <ul class="devlist" id="devList"></ul>
+      </section>
+
+      <!-- Config -->
+      <section class="card span-2">
+        <div class="card-head"><h2>Configuration</h2><span class="muted">saved to config/status-light.config.json</span></div>
+        <div class="cfg-grid">
+          <label>OpenRGB path<input id="cfgOpenRgbPath" placeholder="auto-detect if empty" /></label>
+          <label>Device index<input id="cfgDeviceIndex" type="number" placeholder="-1 = use name" /></label>
+          <label>Device name<input id="cfgDeviceName" placeholder="Anne Pro 2" /></label>
+          <label class="chk"><input id="cfgAllowAll" type="checkbox" /> allow all devices</label>
+          <label class="chk"><input id="cfgNotify" type="checkbox" /> enable notifications</label>
+          <label class="chk"><input id="cfgSounds" type="checkbox" /> enable sounds</label>
+        </div>
+        <div class="colors-head">Status colors</div>
+        <div class="color-grid" id="colorGrid"></div>
+        <div class="cfg-actions">
+          <button class="btn primary" id="btnSave">Save config</button>
+          <span class="muted" id="saveMsg"></span>
+        </div>
+      </section>
+
+      <!-- Events -->
+      <section class="card span-2">
+        <div class="card-head"><h2>Last Hook Events</h2><button class="mini" id="btnRefresh">Refresh</button></div>
+        <div class="events" id="events"></div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span class="muted">localhost only · <code id="footEnv"></code></span>
+      <div id="log" class="log"></div>
+    </footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

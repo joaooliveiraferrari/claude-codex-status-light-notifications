@@ -1,0 +1,43 @@
+{
+  "_comment": "Example Codex CLI hooks (verified against codex-cli 0.141.0). install.ps1 writes this to ~/.codex/hooks.json and points ~/.codex/config.toml at it via: hooks = \"hooks.json\". Codex event enum (from the binary): PreToolUse, PermissionRequest, PostToolUse, PreCompact, PostCompact, SessionStart, UserPromptSubmit, SubagentStart, SubagentStop, Stop. There is NO dedicated 'error' event, so error is driven manually / by the UI. After install, run `codex` once and TRUST the hooks when prompted ('Hooks need review').",
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"<PROJECT>\\status-light.ps1\" -Status idle -Source codex -FromHook"
+        }
+      ]
+    }
+  ],
+  "UserPromptSubmit": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"<PROJECT>\\status-light.ps1\" -Status working -Source codex -FromHook"
+        }
+      ]
+    }
+  ],
+  "PermissionRequest": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"<PROJECT>\\status-light.ps1\" -Status approval -Source codex -FromHook"
+        }
+      ]
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"<PROJECT>\\status-light.ps1\" -Status done -Source codex -FromHook"
+        }
+      ]
+    }
+  ]
+}
