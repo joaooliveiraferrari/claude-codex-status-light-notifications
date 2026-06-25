@@ -245,38 +245,6 @@ sandbox once trusted). Verify your install health with `codex doctor`. Do **not*
 
 ---
 
-## Why ObinsKit may not automate this
-
-ObinsKit (the Anne Pro 2's official app) is **GUI-only**. It has no documented command-line
-interface or watched config file you can script from PowerShell, and it talks to the keyboard
-over its own USB/Bluetooth protocol. So there's no reliable, supported way for a hook to tell
-ObinsKit "turn orange now." **OpenRGB** is the right tool: it exposes a real CLI
-(`OpenRGB.exe --device … --mode static --color …`) and an SDK server, which is exactly what
-automation needs. If you ever find a real ObinsKit CLI, you can add it as another provider in
-`status-light.ps1`.
-
----
-
-## Multiple concurrent sessions
-
-State lives in `%TEMP%\agent-status-lights\state.json`, guarded by a named mutex. Each agent
-session is tracked separately and the **effective** color is the highest-priority active
-status:
-
-```
-approval (5) > working (4) > error (3) > done (2) > idle (1)
-```
-
-Consequences (by design):
-- **One session finishing while another still works → stays working, does NOT turn green.**
-- **Approval turns orange immediately** and stays orange until that session's next
-  working/done/error event (approval outranks working).
-- `off` clears all sessions and turns the light black.
-- Stale sessions are pruned (`sessionMaxAgeMinutes`, default 180); `done` sessions expire to
-  idle after `doneExpireMinutes` (default 30). No background loops, no busy-waiting.
-
----
-
 ## Troubleshooting
 
 **VS Code terminal has a stale PATH** (e.g. you just installed OpenRGB/Node and it's "not
