@@ -176,6 +176,23 @@ function Set-SlOpenRgb {
 # --- Fallback providers ---
 function Show-SlNotification {
   param([string]$Title, [string]$Text)
+  # Primary: a real Windows toast via WinRT (lands in the Action Center, reliable on
+  # Win10/11, fire-and-forget so it never slows the hook). We borrow the well-known
+  # PowerShell AppUserModelID so Windows is willing to render it.
+  try {
+    $null = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
+    $appId = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe'
+    $tmpl = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
+    $nodes = $tmpl.GetElementsByTagName('text')
+    [void]$nodes.Item(0).AppendChild($tmpl.CreateTextNode($Title))
+    [void]$nodes.Item(1).AppendChild($tmpl.CreateTextNode($Text))
+    $toast = [Windows.UI.Notifications.ToastNotification]::new($tmpl)
+    [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($appId).Show($toast)
+    return $true
+  } catch { Write-SlLog "winrt toast unavailable, falling back to balloon: $_" }
+
+  # Fallback: classic NotifyIcon balloon (older Windows / locked-down WinRT). Keep the
+  # icon alive ~700ms so the shell actually renders the balloon before we dispose it.
   try {
     Add-Type -AssemblyName System.Windows.Forms -ErrorAction Stop
     Add-Type -AssemblyName System.Drawing -ErrorAction Stop
@@ -185,7 +202,7 @@ function Show-SlNotification {
     $ni.BalloonTipTitle = $Title
     $ni.BalloonTipText = $Text
     $ni.ShowBalloonTip(3000)
-    Start-Sleep -Milliseconds 200
+    Start-Sleep -Milliseconds 700
     $ni.Dispose()
     return $true
   } catch { Write-SlLog "notification failed: $_"; return $false }
@@ -340,17 +357,21 @@ function Set-AgentStatus {
     $provider = if ($cfg.enableOpenRgb) { Set-SlOpenRgb -Config $cfg -HexPlain $hex.Plain -StatusName $effective } else { 'disabled' }
     Write-SlConsole -StatusName $effective -HexPlain $hex.Plain -Message $Message
 
+    # Notifications & sounds are PER-EVENT: they fire on the status THIS hook requested,
+    # not on the global cross-session "effective" status (that drives only the ambient
+    # RGB light). Otherwise a lingering high-priority session, e.g. a stale 'approval',
+    # would mask the 'done' you get the moment a turn finishes.
     $notified = $false
-    if ($cfg.enableNotifications -and (@($cfg.notifyOnStatuses) -contains $effective)) {
+    if ($cfg.enableNotifications -and (@($cfg.notifyOnStatuses) -contains $Status)) {
       $titles = @{ working='Agent working'; approval='Needs your approval'; done='Task done'; error='Task error' }
-      $t = $titles[$effective]; if (-not $t) { $t = "Agent: $effective" }
-      $body = if ($Message) { $Message } else { "$Source - $effective" }
+      $t = $titles[$Status]; if (-not $t) { $t = "Agent: $Status" }
+      $body = if ($Message) { $Message } else { "$Source - $Status" }
       $notified = Show-SlNotification -Title $t -Text $body
     }
 
     $played = $false
-    if ($cfg.enableSounds -and (@($cfg.soundOnStatuses) -contains $effective)) {
-      $played = Invoke-SlSound -StatusName $effective
+    if ($cfg.enableSounds -and (@($cfg.soundOnStatuses) -contains $Status)) {
+      $played = Invoke-SlSound -StatusName $Status
     }
 
     $sessObj = New-Object psobject
