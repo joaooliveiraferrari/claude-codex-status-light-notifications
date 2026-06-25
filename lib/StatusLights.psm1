@@ -257,7 +257,11 @@ function Add-SlEvent {
   } catch {}
 }
 
-function Read-SlStdinSessionId {
+# Read the hook JSON from stdin ONCE and pull out both the session id and the project
+# directory (Claude Code & Codex send `cwd`). Stdin can only be read once, so this is the
+# single place that consumes it. Returns @{ SessionId; Cwd }.
+function Read-SlStdinHook {
+  $ctx = @{ SessionId = $null; Cwd = $null }
   try {
     if ([Console]::IsInputRedirected) {
       $raw = [Console]::In.ReadToEnd()
@@ -265,13 +269,29 @@ function Read-SlStdinSessionId {
         $obj = $raw | ConvertFrom-Json -ErrorAction SilentlyContinue
         if ($obj) {
           foreach ($k in 'session_id','sessionId','session','conversation_id','id') {
-            if ($obj.$k) { return [string]$obj.$k }
+            if ($obj.$k) { $ctx.SessionId = [string]$obj.$k; break }
+          }
+          foreach ($k in 'cwd','workspace','project_dir','projectDir') {
+            if ($obj.$k) { $ctx.Cwd = [string]$obj.$k; break }
           }
         }
       }
     }
   } catch {}
-  return $null
+  return $ctx
+}
+
+# Build a short, human-readable label for "which agent is this": the project folder name
+# (most meaningful when you run agents in different repos) plus a short session id when
+# available (disambiguates two agents in the same folder). Empty for manual/test calls.
+function Get-SlAgentLabel {
+  param([string]$Cwd, [string]$SessionId, [string]$Source)
+  $parts = @()
+  if ($Cwd) { try { $leaf = Split-Path $Cwd -Leaf } catch { $leaf = '' }; if ($leaf) { $parts += $leaf } }
+  if ($SessionId -and $SessionId -ne "$Source-default") {
+    $parts += $SessionId.Substring(0, [Math]::Min(8, $SessionId.Length))
+  }
+  return ($parts -join ' | ')
 }
 
 <#
@@ -294,10 +314,12 @@ function Set-AgentStatus {
   $cfg = Get-SlConfig
   $now = Get-Date
 
+  $hookCwd = $null
   if (-not $SessionId) {
-    if ($FromHook) { $SessionId = Read-SlStdinSessionId }
+    if ($FromHook) { $ctx = Read-SlStdinHook; $SessionId = $ctx.SessionId; $hookCwd = $ctx.Cwd }
     if (-not $SessionId) { $SessionId = "$Source-default" }
   }
+  $agentLabel = Get-SlAgentLabel -Cwd $hookCwd -SessionId $SessionId -Source $Source
 
   $mutex = $null
   try { $mutex = New-Object System.Threading.Mutex($false, 'agent-status-lights-state') } catch {}
@@ -365,6 +387,9 @@ function Set-AgentStatus {
     if ($cfg.enableNotifications -and (@($cfg.notifyOnStatuses) -contains $Status)) {
       $titles = @{ working='Agent working'; approval='Needs your approval'; done='Task done'; error='Task error' }
       $t = $titles[$Status]; if (-not $t) { $t = "Agent: $Status" }
+      # Tell you which agent/chat fired it (project folder + short session id) so multiple
+      # concurrent agents are distinguishable at a glance.
+      if ($agentLabel) { $t = "$t - $agentLabel" }
       $body = if ($Message) { $Message } else { "$Source - $Status" }
       $notified = Show-SlNotification -Title $t -Text $body
     }
@@ -381,7 +406,7 @@ function Set-AgentStatus {
     }
     Save-SlState $newState
     Add-SlEvent ([pscustomobject]@{
-      ts=$now.ToString('o'); source=$Source; sessionId=$SessionId; requested=$Status
+      ts=$now.ToString('o'); source=$Source; sessionId=$SessionId; label=$agentLabel; requested=$Status
       effective=$effective; color=('#'+$hex.Plain); provider=$provider; notified=$notified; sound=$played; message=$Message
     })
     Write-SlLog "req=$Status eff=$effective provider=$provider sid=$SessionId" $Source

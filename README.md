@@ -146,6 +146,22 @@ notification**, and a **sound**. Toggle each in `config/status-light.config.json
 > turn — so "notify me only when Claude is done" is just `enableOpenRgb: false` +
 > `notifyOnStatuses` containing `done`.
 
+### Which agent fired it? (multiple concurrent agents)
+
+When the hook runs, the agent passes its session id and **project directory** (`cwd`) on
+stdin. The notification title is automatically tagged with **which agent it came from** so
+overlapping agents are easy to tell apart — e.g.:
+
+```
+Task done - my-api-service | a1b2c3d4
+Needs your approval - frontend-app | 9f8e7d6c
+```
+
+The label is the **project folder name** plus a short **session id** (the first 8 chars,
+shown when present so two agents in the *same* folder are still distinguishable). Manual /
+test invocations have no hook payload, so they show no label. The label is also recorded on
+each event (`label` field) for the dashboard and logs.
+
 ---
 
 ## Configuring the OpenRGB device (index / name)
